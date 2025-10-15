@@ -9,13 +9,23 @@ app.get("/health", (req, res) => {
 
 // 🔹 Ruta principal (espera 7 minutos)
 app.get("/", async (req, res) => {
-  console.log("Solicitud recibida. Esperando 7 minutos...");
+  // 🔹 Indicamos que usaremos transferencia chunked
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Transfer-Encoding", "chunked");
 
-  // Esperar 7 minutos = 420,000 ms
-  await new Promise((resolve) => setTimeout(resolve, 420000));
+  res.write("Procesando solicitud...\n");
 
-  console.log("Finalizó la espera. Enviando respuesta...");
-  res.send("Hola 👋, esta respuesta se demoró 7 minutos en llegar.");
+  // 🔹 Enviamos un pequeño chunk cada 30 segundos
+  const keepAlive = setInterval(() => {
+    res.write(`Still working... ${new Date().toISOString()}\n`);
+  }, 30000); // 30 segundos
+
+  // 🔹 Simulamos un proceso largo (6 minutos)
+  await new Promise((resolve) => setTimeout(resolve, 360000));
+
+  clearInterval(keepAlive);
+  res.write("\n✅ Proceso completado después de 6 minutos.\n");
+  res.end(); // Cerramos la respuesta
 });
 
 // 🔹 Render asigna el puerto automáticamente
